@@ -162,8 +162,9 @@ class RateMonothicScheduler:
 		for i in range(delay_periods):
 			period_to_run = self.get_period_to_run_delay()
 			if period_to_run == None:
-				print("Dead time at: " + str(current_time) + " ms --- no task to run")
-				dead_time.append(current_time)
+				time = current_time + round(i * self.resolution, 3)
+				print("Dead time at: " + str(time) + " ms --- no task to run")
+				dead_time.append(time)
 			else:
 				time = current_time + round(i * self.resolution, 3)
 				self.run_period(period_to_run, time)
