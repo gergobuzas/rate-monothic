@@ -21,6 +21,8 @@ class Period:
 		self.finished = False
 		self.started = False
 		self.run_at = list()
+		self.started_at = None
+		self.finished_at = None
 
 	def check_done(self) -> bool :
 		if self.current_capacity == self.task.capacity:
@@ -35,12 +37,14 @@ class Period:
 	def run(self, current_time):
 		if self.started == False:
 			self.started = True
+			self.started_at = current_time
 			print(self.task.name + " started at: " + str(current_time) )
 		self.current_capacity += self.resolution
 		self.current_capacity = round(self.current_capacity, 3)
 		self.run_at.append(current_time)
 		is_done = self.check_done()
 		if is_done:
+			self.finished_at = current_time
 			print(self.task.name + " finished at: " + str(current_time) + "\t Current capacity: " + str(self.current_capacity))
 
 
@@ -68,7 +72,7 @@ class RateMonothicScheduler:
 	def create_periods_for_task(self, task: Task):
 		print(self.lcm)
 		print(task.period_time)
-		amount_of_periods_for_task = math.ceil(self.lcm / task.period_time)
+		amount_of_periods_for_task = math.ceil( (self.lcm - task.first_arrive_time) / task.period_time )
 		print(amount_of_periods_for_task)
 		for i in range(amount_of_periods_for_task):
 			period = Period(task, i * task.period_time, self.resolution)		
@@ -213,6 +217,7 @@ class RateMonothicScheduler:
 		# Getting the dead times
 		results["deadTime"] = dead_time
 		results["sumDeadTime"] = len(dead_time) * self.resolution
+		results["resolution"] = self.resolution
 		
 		print(results)
 		# Exporting to file
