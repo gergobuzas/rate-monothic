@@ -1,4 +1,5 @@
 import math
+import json
 from typing import List
 
 
@@ -11,10 +12,6 @@ class Task:
 
 
 class Period:
-	'''
-	This class should keep hold of a single period of a task 
-		e.g.: task1:0.02-4.5, task2:4.5-8.0
-	'''
 	def __init__(self, task: Task, added_to_start_time, resolution):
 		self.task = task
 		self.period_start_time = task.first_arrive_time + added_to_start_time
@@ -47,6 +44,7 @@ class Period:
 			print(self.task.name + " finished at: " + str(current_time) + "\t Current capacity: " + str(self.current_capacity))
 
 
+dead_time=list()
 class RateMonothicScheduler:
 	def __init__(self, schedule_period, schedule_delay, resolution) -> None:
 		# schedule_period --> How frequent we reschedule
@@ -165,6 +163,7 @@ class RateMonothicScheduler:
 			period_to_run = self.get_period_to_run_delay()
 			if period_to_run == None:
 				print("Dead time at: " + str(current_time) + " ms --- no task to run")
+				dead_time.append(current_time)
 			else:
 				time = current_time + round(i * self.resolution, 3)
 				self.run_period(period_to_run, time)
@@ -191,11 +190,39 @@ class RateMonothicScheduler:
 					self.run_period(period_to_run, time)
 				else:
 					print("Dead time at: " + str(time) + " ms --- no task to run")
+					dead_time.append(time)
 				time += self.resolution
+	
+	def export_results(self, export_location = "result.json"):
+		results = dict()
+		# Getting the task names
+		task_names = list()
+		for period in self.periods:
+			if period.task.name not in task_names:
+				task_names.append(period.task.name)
+		
+		# Getting where each task was run at
+		for name in task_names:
+			list_for_name = list()
+			for period in self.periods:
+				if period.task.name == name:
+					list_for_name.extend(period.run_at)
+			results[name] = list_for_name
+
+		# Getting the dead times
+		results["deadTime"] = dead_time
+		results["sumDeadTime"] = len(dead_time) * self.resolution
+		
+		print(results)
+		# Exporting to file
+		with open(export_location, 'w') as file:
+			json.dump(results, file)
+			
 
 
 if __name__ == "__main__":
 	scheduler = RateMonothicScheduler(4, 0.5, 0.1)
+
 	task1 = Task("task1", 4, 16, 18.1)
 	task2 = Task("task2", 6, 32, 2.2)
 	task3 = Task("task3", 8, 64, 4.3)
@@ -204,4 +231,6 @@ if __name__ == "__main__":
 	scheduler.add_task(task2)
 	scheduler.add_task(task3)
 	scheduler.add_task(task4)
+
 	scheduler.run_scheduling()
+	scheduler.export_results()
